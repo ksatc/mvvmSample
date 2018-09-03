@@ -16,22 +16,15 @@ enum Status {
     case error
 }
 protocol ListViewModelInputs {
-
     func viewDidLoad()
-
     func tablePushed(_ index: IndexPath)
-    func refreshPushed()
+    func reloadPushed()
 }
 
 protocol ListViewModelOutputs {
-
-    var showCoverView: Observable<()> { get }
-    var hideCoverView: Observable<()> { get }
-    
     var itemList: Observable<[Item]> { get }
-    
-    var showAlert: Observable<Item> { get }
-    
+    var showDialog: Observable<Item> { get }
+    var state:  Observable<Status> { get }
 }
 
 protocol ListViewModelType {
@@ -44,34 +37,36 @@ final class ListViewModel: ListViewModelType, ListViewModelInputs, ListViewModel
     var inputs: ListViewModelInputs { return self }
     var outputs: ListViewModelOutputs { return self }
 
-    
-    var showCoverView: Observable<()>
-    var hideCoverView: Observable<()>
     var itemList: Observable<[Item]>
-    var showAlert: Observable<Item>
+    var showDialog: Observable<Item>
+    var state:  Observable<Status>
     
     init() {
         
         let stateProperty = PublishSubject<Status>()
         
         let apiRequest = Observable.of(viewDidLoadProperty.map { _ in },
-                                       refreshPushedProperty.withLatestFrom(stateProperty).filter { $0 != Status.loading }.map { _ in })
+                                       reloadPushedProperty.withLatestFrom(stateProperty).filter { $0 != Status.loading }.map { _ in })
             .merge()
             .do(onNext: { (_) in
                 stateProperty.onNext(.loading)
-            }).flatMap {
+            }).flatMapLatest({
                 return MockApi.shared.testApi()
-            }.do(onNext: { (_) in
-                stateProperty.onNext(.complete)
-            }, onError: { (_) in
-                stateProperty.onNext(.error)
-            }).share(replay: 1, scope: SubjectLifetimeScope.whileConnected)
+                    .do(onSuccess: { (result) in
+                        if result.isEmpty {
+                            stateProperty.onNext(.empty)
+                        } else {
+                            stateProperty.onNext(.complete)
+                        }
+                    }, onError: { (_) in
+                        stateProperty.onNext(.error)
+                    }).catchErrorJustReturn([])
+            }).share(replay: 1, scope: .forever)
         
-        showCoverView = stateProperty.filter { $0 == Status.loading }.map { _ in () }
-        hideCoverView = stateProperty.filter { $0 == Status.complete }.map { _ in () }
+        state = stateProperty
         itemList = apiRequest
         
-        showAlert = tablePushedProperty.withLatestFrom(itemList,
+        showDialog = tablePushedProperty.withLatestFrom(itemList,
                                                        resultSelector: { (indexPath, list) -> Item in
                                                         return list[indexPath.row]
                                                     })
@@ -87,9 +82,9 @@ final class ListViewModel: ListViewModelType, ListViewModelInputs, ListViewModel
         tablePushedProperty.onNext(index)
     }
     
-    private let refreshPushedProperty = PublishSubject<()>()
-    func refreshPushed() {
-        refreshPushedProperty.onNext(())
+    private let reloadPushedProperty = PublishSubject<()>()
+    func reloadPushed() {
+        reloadPushedProperty.onNext(())
     }
 
 }

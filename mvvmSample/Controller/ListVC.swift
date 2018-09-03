@@ -10,11 +10,11 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-
 final class ListVC: UIViewController {
 
     @IBOutlet private weak var tableView: UITableView!
     @IBOutlet private weak var coverView: UIView!
+    @IBOutlet private weak var emptyLabel: UILabel!
     
     private var disposeBag = DisposeBag()
     private let viewModel: ListViewModelType = ListViewModel()
@@ -22,38 +22,63 @@ final class ListVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        viewModel.outputs.showCoverView.subscribe(onNext: {[weak self] () in
-            self?.coverView.isHidden = false
-            self?.tableView.isHidden = true
-        }).disposed(by: disposeBag)
-        
-        viewModel.outputs.hideCoverView.observeOn(MainScheduler.instance).subscribe(onNext: { [weak self] () in
-            self?.coverView.isHidden = true
-            self?.tableView.isHidden = false
-        }).disposed(by: disposeBag)
-        
         viewModel.outputs.itemList.bind(to: tableView.rx.items(cellIdentifier: "Cell")) { row, element, cell in
             cell.textLabel?.text = element.name
         }.disposed(by: disposeBag)
         
-        viewModel.outputs.showAlert.observeOn(MainScheduler.instance).subscribe { [weak self] (item) in
+        viewModel.outputs.showDialog.observeOn(MainScheduler.instance).subscribe (onNext: { [weak self] (item) in
             guard let strongSelf = self else { return }
             let alert = UIAlertController(title: "タップイベント",
-                                          message: "\(item.element!.name)をタップした", preferredStyle: .alert)
+                                          message: "\(item.name)をタップした", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "閉じる", style: .cancel, handler: nil))
             
             strongSelf.present(alert, animated: true, completion: nil)
-        }.disposed(by: disposeBag)
+        }).disposed(by: disposeBag)
         
+        viewModel.outputs.state.observeOn(MainScheduler.instance).subscribe(onNext: {[weak self] (status) in
+            guard let strongSelf = self else { return }
+            switch status {
+            case .loading:
+                strongSelf.coverView.isHidden = false
+                strongSelf.tableView.isHidden = true
+                strongSelf.emptyLabel.isHidden = true
+            case .complete:
+                strongSelf.coverView.isHidden = true
+                strongSelf.tableView.isHidden = false
+                strongSelf.emptyLabel.isHidden = true
+            case .empty:
+                strongSelf.coverView.isHidden = true
+                strongSelf.tableView.isHidden = true
+                strongSelf.emptyLabel.isHidden = false
+            case .error:
+                strongSelf.coverView.isHidden = true
+                strongSelf.tableView.isHidden = true
+                strongSelf.emptyLabel.isHidden = true
+                strongSelf.showAlertError()
+            }
+        }).disposed(by: disposeBag)
         
         tableView.rx.itemSelected.subscribe(onNext: {[weak self] indexPath in
-                self?.viewModel.inputs.tablePushed(indexPath)
+            guard let strongSelf = self else { return }
+            strongSelf.tableView.deselectRow(at: indexPath, animated: true)
+            strongSelf.viewModel.inputs.tablePushed(indexPath)
         }).disposed(by: disposeBag)
         
         viewModel.inputs.viewDidLoad()
     }
 
-    @IBAction private func tappedRefreshButton(_ sender: UIBarButtonItem) {
-        viewModel.inputs.refreshPushed()
+    @IBAction private func tappedReloadButton(_ sender: UIBarButtonItem) {
+        viewModel.inputs.reloadPushed()
+    }
+    
+    private func showAlertError() {
+        
+        let alert = UIAlertController(title: "エラー",
+                                      message: "通信エラーが発生しました。", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "リロードする", style: .default, handler: {[weak self] (_) in
+            self?.viewModel.inputs.reloadPushed()
+        }))
+        
+        present(alert, animated: true, completion: nil)
     }
 }

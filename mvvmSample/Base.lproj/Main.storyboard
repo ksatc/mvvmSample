@@ -64,6 +64,12 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="０件です。。。。" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Yfe-Nl-CUf">
+                                <rect key="frame" x="90" y="319" width="195" height="29"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="24"/>
+                                <color key="textColor" red="1" green="0.3229785952" blue="0.23455957229999999" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="8Lb-RQ-XLz">
                                 <rect key="frame" x="0.0" y="64" width="375" height="603"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -97,7 +103,7 @@
                                         <nil key="highlightedColor"/>
                                     </label>
                                 </subviews>
-                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="backgroundColor" white="0.66666666666666663" alpha="0.67770686619718312" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
                                     <constraint firstItem="QR8-Ed-epn" firstAttribute="centerY" secondItem="8rN-au-wNH" secondAttribute="centerY" id="E5D-2p-1g6"/>
                                     <constraint firstAttribute="height" constant="100" id="VIr-hn-VzJ"/>
@@ -113,19 +119,22 @@
                             <constraint firstItem="8Lb-RQ-XLz" firstAttribute="leading" secondItem="Hcu-w0-jn1" secondAttribute="leading" id="QRk-dJ-321"/>
                             <constraint firstItem="wqO-TC-N7A" firstAttribute="trailing" secondItem="8Lb-RQ-XLz" secondAttribute="trailing" id="SoK-0Z-6Q3"/>
                             <constraint firstItem="8rN-au-wNH" firstAttribute="centerY" secondItem="Hcu-w0-jn1" secondAttribute="centerY" id="ZI8-6d-zRd"/>
+                            <constraint firstItem="Yfe-Nl-CUf" firstAttribute="centerX" secondItem="Hcu-w0-jn1" secondAttribute="centerX" id="aZf-m3-3rN"/>
                             <constraint firstItem="8Lb-RQ-XLz" firstAttribute="top" secondItem="wqO-TC-N7A" secondAttribute="top" id="h4d-xS-bey"/>
+                            <constraint firstItem="Yfe-Nl-CUf" firstAttribute="centerY" secondItem="Hcu-w0-jn1" secondAttribute="centerY" id="xKh-QY-xF8"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="wqO-TC-N7A"/>
                     </view>
                     <navigationItem key="navigationItem" title="一覧" id="04Z-wu-a7o">
                         <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="wpr-Zy-gOO">
                             <connections>
-                                <action selector="tappedRefreshButton:" destination="hYl-41-Mr5" id="0Tx-Yy-xgQ"/>
+                                <action selector="tappedReloadButton:" destination="hYl-41-Mr5" id="0Tx-Yy-xgQ"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
                     <connections>
                         <outlet property="coverView" destination="8rN-au-wNH" id="TW1-p4-VgR"/>
+                        <outlet property="emptyLabel" destination="Yfe-Nl-CUf" id="YWt-z5-zo7"/>
                         <outlet property="tableView" destination="8Lb-RQ-XLz" id="SL9-l4-Vls"/>
                     </connections>
                 </viewController>
